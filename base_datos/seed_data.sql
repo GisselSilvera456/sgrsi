@@ -8,7 +8,6 @@
 -- En app.py se compara con generate_password_hash al crear usuarios reales
 INSERT INTO usuarios (nombre, apellido, email, contrasena_hash, id_rol) VALUES
 ('Admin', 'Cronos', 'admin@iti.edu.uy', 'pbkdf2:sha256:600000$placeholder$0000000000000000000000000000000000000000000000000000000000000000', 1),
-('Jorge', 'Molinari', 'jorge@iti.edu.uy', 'pbkdf2:sha256:600000$placeholder$0000000000000000000000000000000000000000000000000000000000000000', 2),
 ('Gissel', 'Silvera', 'gissel@iti.edu.uy', 'pbkdf2:sha256:600000$placeholder$0000000000000000000000000000000000000000000000000000000000000000', 2),
 ('Diego', 'de Bethencourt', 'diego@iti.edu.uy', 'pbkdf2:sha256:600000$placeholder$0000000000000000000000000000000000000000000000000000000000000000', 2),
 ('Andres', 'Cabrera', 'andres@iti.edu.uy', 'pbkdf2:sha256:600000$placeholder$0000000000000000000000000000000000000000000000000000000000000000', 2),
