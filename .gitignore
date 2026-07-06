@@ -1,14 +1,18 @@
-# Archivos del sistema operativo
+# Variables de entorno (credenciales)
+.env
+
+# Entorno virtual de Python
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Archivos del sistema
 .DS_Store
 Thumbs.db
+
+# Logs
 *.log
 
-# Configuración local / sensibles
-.env
-config.local.php
-vendor/
-
-# IDEs y editores
-.vscode/
-.idea/
-*.swp
+# Archivos de configuración local de PythonAnywhere
+*.wsgi.bak

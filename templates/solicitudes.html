@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block titulo %}Solicitudes{% endblock %}
+
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="mb-1">Solicitudes de servicio</h1>
+        <p class="text-muted mb-0">Canal formal para docentes y funcionarios (RF-05) &mdash; reemplaza el email</p>
+    </div>
+    <button class="btn btn-cronos" data-bs-toggle="modal" data-bs-target="#modalNuevaSolicitud">
+        <i class="bi bi-plus-lg"></i> Nueva solicitud
+    </button>
+</div>
+
+<div class="card-cronos">
+    <div class="table-responsive">
+        <table class="table table-cronos align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th>Laboratorio</th>
+                    <th>Solicitante</th>
+                    <th>Fecha necesaria</th>
+                    <th>Estado</th>
+                    {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+                    <th>Acciones</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in solicitudes %}
+                <tr>
+                    <td>#{{ s.id_solicitud }}</td>
+                    <td>{{ s.tipo }}</td>
+                    <td>{{ s.descripcion }}</td>
+                    <td>{{ s.laboratorio or '-' }}</td>
+                    <td><small>{{ s.solicitante_nombre }} {{ s.solicitante_apellido }}</small></td>
+                    <td>{{ s.fecha_necesaria or '-' }}</td>
+                    <td>
+                        {% set colores_solicitud = {
+                            'Pendiente': '#F7941E', 'En proceso': '#0089B8',
+                            'Completada': '#43B02A', 'Rechazada': '#E63946'
+                        } %}
+                        <span class="badge-estado" style="background-color: {{ colores_solicitud.get(s.estado, '#7F8C8D') }};">
+                            {{ s.estado }}
+                        </span>
+                    </td>
+                    {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+                    <td>
+                        <form method="POST" action="{{ url_for('solicitudes_actualizar_estado', id_solicitud=s.id_solicitud) }}" class="d-flex gap-1">
+                            <select name="id_estado_solicitud" class="form-select form-select-sm" style="width: auto;">
+                                {% for est in estados_solicitud %}
+                                <option value="{{ est.id_estado_solicitud }}"
+                                    {% if est.id_estado_solicitud == s.id_estado_solicitud %}selected{% endif %}>
+                                    {{ est.nombre_estado }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-cronos-outline">
+                                <i class="bi bi-check-lg"></i>
+                            </button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        No hay solicitudes registradas todavía.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: nueva solicitud -->
+<div class="modal fade" id="modalNuevaSolicitud" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('solicitudes_nueva') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-envelope-paper"></i> Nueva solicitud de servicio</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de solicitud *</label>
+                        <select name="id_tipo_solicitud" class="form-select" required>
+                            <option value="" disabled selected>Seleccionar...</option>
+                            {% for tipo in tipos_solicitud %}
+                            <option value="{{ tipo.id_tipo_solicitud }}">{{ tipo.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Laboratorio (opcional)</label>
+                        <select name="id_laboratorio" class="form-select">
+                            <option value="">Sin especificar</option>
+                            {% for lab in laboratorios %}
+                            <option value="{{ lab.id_laboratorio }}">{{ lab.nombre }} ({{ lab.numero_salon }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción *</label>
+                        <textarea name="descripcion" class="form-control" rows="3"
+                                  placeholder="Ej: instalar Python 3.12 y VS Code en todas las PC del laboratorio 1"
+                                  required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fecha necesaria (opcional)</label>
+                        <input type="date" name="fecha_necesaria" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-cronos">Enviar solicitud</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

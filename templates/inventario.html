@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block titulo %}Inventario{% endblock %}
+
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="mb-1">Inventario de equipos</h1>
+        <p class="text-muted mb-0">Gestión de laboratorios y equipos tecnológicos (RF-02)</p>
+    </div>
+    {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+    <button class="btn btn-cronos" data-bs-toggle="modal" data-bs-target="#modalNuevoEquipo">
+        <i class="bi bi-plus-lg"></i> Nuevo equipo
+    </button>
+    {% endif %}
+</div>
+
+<div class="card-cronos">
+    <div class="table-responsive">
+        <table class="table table-cronos align-middle">
+            <thead>
+                <tr>
+                    <th>Identificador</th>
+                    <th>Tipo</th>
+                    <th>Marca / Modelo</th>
+                    <th>Laboratorio</th>
+                    <th>Estado</th>
+                    <th>Observaciones</th>
+                    {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+                    <th>Acciones</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in equipos %}
+                <tr>
+                    <td><strong>{{ e.identificador }}</strong></td>
+                    <td>{{ e.tipo }}</td>
+                    <td>{{ e.marca or '-' }} {{ e.modelo or '' }}</td>
+                    <td>{{ e.laboratorio or '<span class="text-muted">Sin asignar</span>'|safe }}</td>
+                    <td>
+                        <span class="badge-estado" style="background-color: {{ e.color_hex }};">
+                            {{ e.estado }}
+                        </span>
+                    </td>
+                    <td><small class="text-muted">{{ e.observaciones or '-' }}</small></td>
+                    {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+                    <td>
+                        <button class="btn btn-sm btn-cronos-outline"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalEstado{{ e.id_equipo }}">
+                            <i class="bi bi-pencil-square"></i> Estado
+                        </button>
+                    </td>
+                    {% endif %}
+                </tr>
+
+                <!-- Modal cambio de estado -->
+                {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+                <div class="modal fade" id="modalEstado{{ e.id_equipo }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form method="POST" action="{{ url_for('inventario_actualizar_estado', id_equipo=e.id_equipo) }}">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Actualizar estado &mdash; {{ e.identificador }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nuevo estado</label>
+                                        <select name="id_estado_equipo" class="form-select" required>
+                                            {% for est in estados_equipo %}
+                                            <option value="{{ est.id_estado_equipo }}">{{ est.nombre_estado }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Observación / motivo del cambio</label>
+                                        <textarea name="descripcion" class="form-control" rows="3"
+                                                  placeholder="Ej: equipo reparado, se reemplazó la fuente..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-cronos">Guardar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        No hay equipos registrados todavía.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: nuevo equipo -->
+{% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+<div class="modal fade" id="modalNuevoEquipo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('inventario_nuevo') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-lg"></i> Nuevo equipo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">Identificador *</label>
+                            <input type="text" name="identificador" class="form-control" placeholder="Ej: PC-107" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Tipo de equipo *</label>
+                            <select name="id_tipo_equipo" class="form-select" required>
+                                <option value="" disabled selected>Seleccionar...</option>
+                                {% for tipo in tipos_equipo %}
+                                <option value="{{ tipo.id_tipo_equipo }}">{{ tipo.nombre_tipo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Marca</label>
+                            <input type="text" name="marca" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Modelo</label>
+                            <input type="text" name="modelo" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Estado *</label>
+                            <select name="id_estado_equipo" class="form-select" required>
+                                {% for est in estados_equipo %}
+                                <option value="{{ est.id_estado_equipo }}"
+                                    {% if est.nombre_estado == 'Correcto' %}selected{% endif %}>
+                                    {{ est.nombre_estado }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Laboratorio</label>
+                            <select name="id_laboratorio" class="form-select">
+                                <option value="">Sin asignar</option>
+                                {% for lab in laboratorios %}
+                                <option value="{{ lab.id_laboratorio }}">{{ lab.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Observaciones</label>
+                            <textarea name="observaciones" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-cronos">Agregar equipo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

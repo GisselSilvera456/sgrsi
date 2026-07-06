@@ -1,34 +1,71 @@
-https://github.com/cronoscotuy-creator/sgrsi.git
+# SGRSI — Sistema de Gestión de Recursos y Soporte de Informática
+**Grupo Cronos · Change On Time · ITI – CETP 2026**
 
-Alumnos de 3MF del turno NOCTURNO del Instituto Tecnológico de Informática- Nombre fantasía de la empresa y slogan "CRONOS" - "CHANGE ON TIME".
-dev
+---
 
-Diego
-======
+## Despliegue en PythonAnywhere
 
-=======
+### 1. Clonar el repositorio
 
-# SGRSI - Sistema de Gestión de Recursos y Soporte ITI
-Proyecto de fin de año | Equipo Cronos | ITI 2026
+En la consola de PythonAnywhere (pestaña **Consoles → Bash**):
 
-## 🚀 Inicio Rápido
-1. Clonar repositorio: `git clone <url-repo>`
-2. Importar base de datos: `mysql -u root -p < base_datos/esquema.sql`
-3. Ajustar credenciales en `configuracion/conexion_db.php`
-4. Servir entorno local: `php -S localhost:8000`
-5. Acceder en navegador: `http://localhost:8000/index.php?pagina=login`
+```bash
+cd /home/2mhiti2025
+git clone https://github.com/cronoscotuy-creator/sgrsi.git
+cd sgrsi
+```
 
-## 📁 Estructura
-- `configuracion/`: Conexión PDO y constantes globales
-- `plantillas/`: Encabezado y pie de página reutilizables
-- `modulos/`: Lógica y vistas por funcionalidad (RF-01 a RF-06)
-- `assets/`: CSS, JS, imágenes
-- `documentacion/`: Entregables académicos (IEEE 830, FODA, DER, Gantt)
+### 2. Instalar dependencias
 
-## 🛠️ Stack Tecnológico
-PHP 8+, MySQL 8+, Bootstrap 5, jQuery 3.7, AES-256-GCM
+```bash
+pip3.10 install --user -r requirements.txt
+```
 
 
-Diego
-main
-main
+### 8. Ingresar al sistema
+
+- URL: `https://2mhiti2025.pythonanywhere.com/login`
+- Email: `admin@iti.edu.uy`
+- Contraseña: `admin123`
+
+---
+
+## Estructura del proyecto
+
+```
+sgrsi/
+├── app.py                  # Aplicación Flask principal
+├── requirements.txt        # Dependencias Python
+├── .env.example            # Ejemplo de variables de entorno
+├── .gitignore
+├── README.md
+├── base_datos/
+│   ├── esquema.sql         # DDL — creación de tablas
+│   └── seed_data.sql       # DML — datos de prueba
+├── static/
+│   ├── css/style.css       # Estilos con paleta Ceibal
+│   └── js/main.js          # JavaScript general
+└── templates/
+    ├── base.html           # Layout compartido con navbar
+    ├── login.html
+    ├── index.html          # Dashboard
+    ├── inventario.html     # RF-02
+    ├── tickets.html        # RF-03 Mesa de ayuda
+    ├── solicitudes.html    # RF-05
+    ├── prestamos.html      # RF-07
+    └── metricas.html       # RF-10
+```
+
+---
+
+## Módulos implementados
+
+| Módulo | RF | Descripción |
+|---|---|---|
+| Dashboard | RF-10 | Resumen general del estado del sistema |
+| Inventario | RF-02, RF-04 | ABM de equipos, estados e historial |
+| Mesa de Ayuda | RF-03 | Tickets con prioridad, menú de incidentes y resolución |
+| Solicitudes | RF-05 | Reemplaza el email para solicitudes de docentes |
+| Préstamos | RF-07 | Control de préstamos y devoluciones |
+| Métricas | RF-10 | Estadísticas del sistema |
+| Control de acceso | RF-06 | Roles: administrador, técnico, solicitante |

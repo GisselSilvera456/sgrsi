@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block titulo %}Mesa de Ayuda{% endblock %}
+
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="mb-1">Mesa de ayuda</h1>
+        <p class="text-muted mb-0">Registro y seguimiento de incidencias (RF-03)</p>
+    </div>
+    <button class="btn btn-cronos" data-bs-toggle="modal" data-bs-target="#modalNuevoTicket">
+        <i class="bi bi-plus-lg"></i> Nuevo ticket
+    </button>
+</div>
+
+<div class="card-cronos">
+    <div class="table-responsive">
+        <table class="table table-cronos align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Salón / Lab</th>
+                    <th>N° Máquina</th>
+                    <th>Incidente</th>
+                    <th>Prioridad</th>
+                    <th>Estado</th>
+                    <th>Solicitante</th>
+                    <th>Técnico</th>
+                    {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+                    <th>Acciones</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in tickets %}
+                <tr>
+                    <td>#{{ t.id_ticket }}</td>
+                    <td>{{ t.laboratorio or '-' }}</td>
+                    <td>{{ t.equipo or '-' }}</td>
+                    <td>
+                        {{ t.incidente }}
+                        {% if t.descripcion %}
+                        <br><small class="text-muted">{{ t.descripcion[:50] }}{% if t.descripcion|length > 50 %}...{% endif %}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge-estado" style="background-color: {{ t.color_prioridad }};">
+                            {{ t.prioridad }}
+                        </span>
+                    </td>
+                    <td>
+                        {% set colores_estado = {'Pendiente': '#F7941E', 'En proceso': '#0089B8', 'Resuelto': '#43B02A'} %}
+                        <span class="badge-estado" style="background-color: {{ colores_estado.get(t.estado, '#7F8C8D') }};">
+                            {{ t.estado }}
+                        </span>
+                    </td>
+                    <td><small>{{ t.solicitante_nombre }} {{ t.solicitante_apellido }}</small></td>
+                    <td>
+                        <small>
+                            {% if t.tecnico_nombre %}{{ t.tecnico_nombre }} {{ t.tecnico_apellido }}{% else %}<span class="text-muted">Sin asignar</span>{% endif %}
+                        </small>
+                    </td>
+                    {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+                    <td>
+                        <button class="btn btn-sm btn-cronos-outline"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalTicket{{ t.id_ticket }}">
+                            <i class="bi bi-pencil-square"></i> Gestionar
+                        </button>
+                    </td>
+                    {% endif %}
+                </tr>
+
+                <!-- Modal gestión de ticket (soporte) -->
+                {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+                <div class="modal fade" id="modalTicket{{ t.id_ticket }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form method="POST" action="{{ url_for('tickets_actualizar_estado', id_ticket=t.id_ticket) }}">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Ticket #{{ t.id_ticket }} &mdash; {{ t.incidente }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>Descripción:</strong> {{ t.descripcion or 'Sin descripción' }}</p>
+                                    <p><strong>Salón:</strong> {{ t.laboratorio or '-' }} &middot;
+                                       <strong>Equipo:</strong> {{ t.equipo or '-' }}</p>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Estado</label>
+                                        <select name="id_estado_ticket" class="form-select" required>
+                                            {% for est in estados_ticket %}
+                                            <option value="{{ est.id_estado_ticket }}"
+                                                {% if est.id_estado_ticket == t.id_estado_ticket %}selected{% endif %}>
+                                                {{ est.nombre_estado }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <!-- Atajo rápido: marcar como resuelto con un click -->
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="resuelto{{ t.id_ticket }}"
+                                               onchange="if(this.checked){this.closest('form').querySelector('select[name=id_estado_ticket]').value='3'}">
+                                        <label class="form-check-label" for="resuelto{{ t.id_ticket }}">
+                                            Marcar como resuelto (ej: equipo desenchufado, problema simple)
+                                        </label>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Nota de resolución / comentario</label>
+                                        <textarea name="nota_resolucion" class="form-control" rows="3"
+                                                  placeholder="Ej: se reconectó el cable de red, problema solucionado.">{{ t.nota_resolucion or '' }}</textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-cronos">Guardar cambios</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-4">
+                        No hay tickets registrados todavía.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: nuevo ticket -->
+<div class="modal fade" id="modalNuevoTicket" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('tickets_nuevo') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-life-preserver"></i> Nuevo ticket</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">Salón / Laboratorio</label>
+                            <select name="id_laboratorio" class="form-select">
+                                <option value="">Sin especificar</option>
+                                {% for lab in laboratorios %}
+                                <option value="{{ lab.id_laboratorio }}">{{ lab.nombre }} ({{ lab.numero_salon }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">N° de máquina / equipo</label>
+                            <select name="id_equipo" class="form-select">
+                                <option value="">Sin especificar</option>
+                                {% for eq in equipos %}
+                                <option value="{{ eq.id_equipo }}">{{ eq.identificador }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Tipo de incidente *</label>
+                            <select name="incidente" class="form-select" id="selectIncidente" required>
+                                <option value="" disabled selected>Seleccionar...</option>
+                                {% for inc in incidentes_comunes %}
+                                <option value="{{ inc }}">{{ inc }}</option>
+                                {% endfor %}
+                            </select>
+                            <!-- Campo editable que aparece si elige "Otro" -->
+                            <input type="text" id="incidenteOtro" class="form-control mt-2 d-none"
+                                   placeholder="Describir el incidente">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Prioridad *</label>
+                            <select name="id_prioridad" class="form-select" required>
+                                {% for p in prioridades %}
+                                <option value="{{ p.id_prioridad }}">{{ p.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Descripción adicional</label>
+                            <textarea name="descripcion" class="form-control" rows="3"
+                                      placeholder="Detalles del problema..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-cronos">Crear ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Si el usuario elige "Otro", muestra un campo de texto editable
+// y reemplaza el valor del <select> al enviar el formulario.
+const selectIncidente = document.getElementById('selectIncidente');
+const incidenteOtro = document.getElementById('incidenteOtro');
+
+selectIncidente.addEventListener('change', function () {
+    if (this.value === 'Otro') {
+        incidenteOtro.classList.remove('d-none');
+        incidenteOtro.setAttribute('required', 'required');
+    } else {
+        incidenteOtro.classList.add('d-none');
+        incidenteOtro.removeAttribute('required');
+    }
+});
+
+incidenteOtro.closest('form').addEventListener('submit', function () {
+    if (selectIncidente.value === 'Otro' && incidenteOtro.value.trim() !== '') {
+        // Crea una opción nueva con el texto escrito y la selecciona
+        const opcion = document.createElement('option');
+        opcion.value = incidenteOtro.value.trim();
+        opcion.selected = true;
+        selectIncidente.appendChild(opcion);
+    }
+});
+</script>
+{% endblock %}

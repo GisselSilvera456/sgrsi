@@ -1,1 +1,0 @@
-RF-01 a RF-10, no-funcionales (rendimiento, seguridad, backup), alcance explícito

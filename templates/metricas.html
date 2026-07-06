@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block titulo %}Métricas{% endblock %}
+
+{% block contenido %}
+<h1 class="mb-1">Métricas y reportes</h1>
+<p class="text-muted mb-4">Resumen estadístico del sistema (RF-10)</p>
+
+<div class="row g-3">
+
+    <!-- Equipos por estado -->
+    <div class="col-md-6">
+        <div class="card-cronos h-100">
+            <h3><i class="bi bi-pc-display"></i> Equipos por estado</h3>
+            {% if equipos_por_estado %}
+            <table class="table table-sm mt-2">
+                <thead><tr><th>Estado</th><th class="text-end">Cantidad</th></tr></thead>
+                <tbody>
+                {% for e in equipos_por_estado %}
+                <tr>
+                    <td>
+                        <span class="badge-estado" style="background-color: {{ e.color_hex }};">
+                            {{ e.nombre_estado }}
+                        </span>
+                    </td>
+                    <td class="text-end"><strong>{{ e.cantidad }}</strong></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">Sin datos.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tickets por estado -->
+    <div class="col-md-6">
+        <div class="card-cronos h-100">
+            <h3><i class="bi bi-life-preserver"></i> Tickets por estado</h3>
+            {% if tickets_por_estado %}
+            {% set colores_t = {'Pendiente':'#F7941E','En proceso':'#0089B8','Resuelto':'#43B02A'} %}
+            <table class="table table-sm mt-2">
+                <thead><tr><th>Estado</th><th class="text-end">Cantidad</th></tr></thead>
+                <tbody>
+                {% for t in tickets_por_estado %}
+                <tr>
+                    <td>
+                        <span class="badge-estado" style="background-color: {{ colores_t.get(t.nombre_estado, '#7F8C8D') }};">
+                            {{ t.nombre_estado }}
+                        </span>
+                    </td>
+                    <td class="text-end"><strong>{{ t.cantidad }}</strong></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">Sin datos.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tickets por prioridad -->
+    <div class="col-md-6">
+        <div class="card-cronos h-100">
+            <h3><i class="bi bi-exclamation-triangle"></i> Tickets por prioridad</h3>
+            {% if tickets_por_prioridad %}
+            <table class="table table-sm mt-2">
+                <thead><tr><th>Prioridad</th><th class="text-end">Cantidad</th></tr></thead>
+                <tbody>
+                {% for p in tickets_por_prioridad %}
+                <tr>
+                    <td>
+                        <span class="badge-estado" style="background-color: {{ p.color_hex }};">
+                            {{ p.nombre }}
+                        </span>
+                    </td>
+                    <td class="text-end"><strong>{{ p.cantidad }}</strong></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">Sin datos.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Equipos con más incidencias -->
+    <div class="col-md-6">
+        <div class="card-cronos h-100">
+            <h3><i class="bi bi-bar-chart"></i> Equipos con más incidencias (top 5)</h3>
+            {% if equipos_mas_fallados %}
+            <table class="table table-sm mt-2">
+                <thead><tr><th>Equipo</th><th class="text-end">Tickets</th></tr></thead>
+                <tbody>
+                {% for e in equipos_mas_fallados %}
+                <tr>
+                    <td><strong>{{ e.identificador }}</strong></td>
+                    <td class="text-end">{{ e.cantidad_tickets }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">Sin datos.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Solicitudes por tipo -->
+    <div class="col-12">
+        <div class="card-cronos">
+            <h3><i class="bi bi-envelope-paper"></i> Solicitudes por tipo</h3>
+            {% if solicitudes_por_tipo %}
+            <div class="row g-2 mt-1">
+                {% for s in solicitudes_por_tipo %}
+                <div class="col-6 col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-valor" style="font-size: 1.8rem;">{{ s.cantidad }}</div>
+                        <div class="metric-label">{{ s.nombre }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">Sin datos.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

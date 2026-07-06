@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block titulo %}Préstamos{% endblock %}
+
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="mb-1">Préstamos de equipos</h1>
+        <p class="text-muted mb-0">Control de stock y trazabilidad de préstamos (RF-07)</p>
+    </div>
+    {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+    <button class="btn btn-cronos" data-bs-toggle="modal" data-bs-target="#modalNuevoPrestamo">
+        <i class="bi bi-plus-lg"></i> Nuevo préstamo
+    </button>
+    {% endif %}
+</div>
+
+{% if equipos_disponibles|length == 0 %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i>
+    Actualmente no hay equipos móviles disponibles para préstamo.
+    Este módulo queda preparado para cuando la institución incorpore laptops u otros equipos prestables.
+</div>
+{% endif %}
+
+<div class="card-cronos">
+    <div class="table-responsive">
+        <table class="table table-cronos align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Equipo</th>
+                    <th>Retirado por</th>
+                    <th>Entregado por</th>
+                    <th>Fecha préstamo</th>
+                    <th>Devolución estimada</th>
+                    <th>Devolución real</th>
+                    <th>Estado</th>
+                    {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+                    <th>Acciones</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in prestamos %}
+                <tr>
+                    <td>#{{ p.id_prestamo }}</td>
+                    <td><strong>{{ p.equipo }}</strong></td>
+                    <td><small>{{ p.usuario_nombre }} {{ p.usuario_apellido }}</small></td>
+                    <td><small>{{ p.tecnico_nombre }} {{ p.tecnico_apellido }}</small></td>
+                    <td>{{ p.fecha_prestamo.strftime('%d/%m/%Y') if p.fecha_prestamo else '-' }}</td>
+                    <td>{{ p.fecha_devolucion_est or '-' }}</td>
+                    <td>{{ p.fecha_devolucion_real.strftime('%d/%m/%Y') if p.fecha_devolucion_real else '-' }}</td>
+                    <td>
+                        {% set colores_prestamo = {'Activo': '#0089B8', 'Devuelto': '#43B02A', 'Atrasado': '#E63946'} %}
+                        <span class="badge-estado" style="background-color: {{ colores_prestamo.get(p.estado, '#7F8C8D') }};">
+                            {{ p.estado }}
+                        </span>
+                    </td>
+                    {% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+                    <td>
+                        {% if p.estado == 'Activo' %}
+                        <form method="POST" action="{{ url_for('prestamos_devolver', id_prestamo=p.id_prestamo) }}">
+                            <button type="submit" class="btn btn-sm btn-cronos-outline">
+                                <i class="bi bi-arrow-return-left"></i> Devolver
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-4">
+                        No hay préstamos registrados todavía.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: nuevo préstamo -->
+{% if usuario_actual.rol in ['administrador', 'tecnico'] %}
+<div class="modal fade" id="modalNuevoPrestamo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('prestamos_nuevo') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-arrow-left-right"></i> Nuevo préstamo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Equipo disponible *</label>
+                        <select name="id_equipo" class="form-select" required {% if equipos_disponibles|length == 0 %}disabled{% endif %}>
+                            <option value="" disabled selected>Seleccionar...</option>
+                            {% for eq in equipos_disponibles %}
+                            <option value="{{ eq.id_equipo }}">{{ eq.identificador }} ({{ eq.nombre_tipo }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fecha de devolución estimada</label>
+                        <input type="date" name="fecha_devolucion_est" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observaciones</label>
+                        <textarea name="observaciones" class="form-control" rows="2"
+                                  placeholder="Ej: préstamo para presentación en clase"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-cronos" {% if equipos_disponibles|length == 0 %}disabled{% endif %}>
+                        Registrar préstamo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
